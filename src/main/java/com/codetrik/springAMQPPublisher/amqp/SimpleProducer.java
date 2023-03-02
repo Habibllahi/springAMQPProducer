@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Setter
 @RequiredArgsConstructor
 @Service
-public class Producer {
+public class SimpleProducer {
     private final RabbitTemplate rabbitTemplate;
 
     public void send(String exchange, String routingKey, String message){
