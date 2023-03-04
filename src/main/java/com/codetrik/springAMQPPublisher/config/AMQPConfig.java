@@ -1,10 +1,14 @@
 package com.codetrik.springAMQPPublisher.config;
 
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionListener;
 import org.springframework.amqp.rabbit.connection.PooledChannelConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +18,7 @@ import org.springframework.retry.support.RetryTemplate;
 @Configuration
 public class AMQPConfig {
 
+    //Setup RabbitTemplate with Retry capability
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory cf, RetryTemplate retryTemplate) {
         RabbitTemplate template = new RabbitTemplate(cf);
@@ -22,9 +27,31 @@ public class AMQPConfig {
     }
 
     //Create a Queue
-    @Bean
+    @Bean("just-queue")
     public Queue createQueue(@Value("${com.codetrik.amqp.queue}") String name){
         return new Queue(name,false);
+    }
+
+    @Bean("rpc-queue")
+    public Queue createRpcQueue(@Value("${com.codetrik.amqp.rpc-queue}") String name){
+        return new Queue(name,false);
+    }
+
+    @Bean("reply-to-queue")
+    public Queue createReplyToQueue(@Value("${com.codetrik.amqp.reply-to-queue}") String name){
+        return new Queue(name,false);
+    }
+
+    @Bean("rpc-direct")
+    public DirectExchange directExchange(@Value("${com.codetrik.amqp.direct-exchange}") String name){
+        return new DirectExchange(name,false,false);
+    }
+
+    @Bean
+    public Binding rpcQueueBindToDirectExchange(@Qualifier("rpc-queue") Queue rpcQueue,
+                                                @Qualifier("rpc-direct") DirectExchange rpcDirectExchange,
+                                                @Value("${com.codetrik.amqp.router}") String routeKey){
+        return BindingBuilder.bind(rpcQueue).to(rpcDirectExchange).with(routeKey);
     }
 
     //Set up a RetryTemplate Bean, this is intended to add retry capability to RabbitTemplate
@@ -39,6 +66,7 @@ public class AMQPConfig {
         return retryTemplate;
     }
 
+    //Setup ConnectionFactory, add a connectionListener to it
     @Bean
     public ConnectionFactory connectionFactory(@Value("${spring.rabbitmq.host}") String host,
                                                @Value("${spring.rabbitmq.port}")int port,
