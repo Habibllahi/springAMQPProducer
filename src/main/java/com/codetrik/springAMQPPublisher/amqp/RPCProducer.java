@@ -16,10 +16,11 @@ import java.nio.charset.StandardCharsets;
 @Service
 public class RPCProducer {
     private final RabbitTemplate rabbitTemplate;
-    public void sendAndReceive(String exchange, String routingKey, String message, String replyTo, String correlationId){
-        var props = MessagePropertiesBuilder.newInstance().setReplyTo(replyTo).setCorrelationId("correlationId")
+    public void send(String exchange, String routingKey, String message,String correlationId){
+        var props = MessagePropertiesBuilder.newInstance()
+                .setCorrelationId(correlationId)
                 .build();
         var msg = MessageBuilder.withBody(message.getBytes(StandardCharsets.UTF_8)).andProperties(props).build();
-        rabbitTemplate.sendAndReceive(exchange,routingKey,msg);
+        rabbitTemplate.send(exchange,routingKey,msg);
     }
 }

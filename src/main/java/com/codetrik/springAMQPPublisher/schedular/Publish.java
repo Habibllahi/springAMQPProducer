@@ -27,8 +27,6 @@ public class Publish {
     private String rpcDirect;
     @Value("${com.codetrik.amqp.router}")
     private String routeKey;
-    @Value("${com.codetrik.amqp.reply-to-queue}")
-    private String replyTo;
     @Value("${com.codetrik.amqp.correlationId}")
     private String correlationId;
 
@@ -41,7 +39,7 @@ public class Publish {
     @Scheduled(fixedDelay = 2L, timeUnit = TimeUnit.SECONDS)
     @Async
     public void run2(){
-        rpcProducer.sendAndReceive(rpcDirect,routeKey,"Hello AMQP RPC",replyTo,correlationId);
+        rpcProducer.send(rpcDirect,routeKey,"Hello AMQP RPC",correlationId);
     }
 
 }
